@@ -19,8 +19,9 @@ local spawnIntMax = 30 --Gameloop max spawn
 local spawned = 0 --Keep track of enemies
 local spawnedMax = 10 --Max allowed per level
 local score = 0
-local enemySpeed = -5 --How fast the enemies are
-local scoreText; local levelText; local ship; local wave=5;
+local pregPercent = 0
+local enemySpeed = -8 --How fast the enemies are
+local scoreText; local percentText; local ship; local wave=5;
 
 local function levelSetup()
  stars1 = display.newImageRect("images/bg.png", 628,280)
@@ -29,6 +30,14 @@ local function levelSetup()
  stars2 = display.newImageRect("images/bg.png", 628,280)
  stars2.x = _W*0.5; stars2.y = _H*0.5
  levelGroup:insert(stars2)
+ scoreText = display.newText("Score: "..score, 0,0,"Helvetica",18)
+ scoreText:setTextColor(225, 225, 225)
+ scoreText.x = _W*0.5; scoreText.y = 10
+ levelGroup:insert(scoreText)
+ percentText = display.newText("Percent: "..pregPercent, 0,0,"Helvetica",18)
+ percentText:setTextColor(255, 255, 255)
+ percentText.x = 0; percentText.y = 10
+ levelGroup:insert(percentText)
 
  --Move Uterus.
  stars1:translate(0,2); stars2:translate(0,2)
@@ -58,28 +67,22 @@ local function levelSetup()
   end
   return true
  end
- ship = display.newImageRect("images/ship_3.png", 48, 60)
+ ship = display.newImageRect("images/ship.png", 100, 60)
  ship.x = -80; ship.y = _H*0.5; ship.name = "ship"
  physics.addBody( ship, { isSensor = true } )
  ship:addEventListener("touch",moveShip)
- levelGroup:insert(ship) 
+ levelGroup:insert(ship)
  transition.to(ship, {time = 600, x = 0})
 
- local laserBlock = display.newRect(0,-80,280,2)
- laserBlock.name = "blocker" 
-        physics.addBody( laserBlock, { isSensor = true } )
- levelGroup:insert(laserBlock)
-
- local shipBlock = display.newRect(0,_H+30,280,2)
- shipBlock.name = "blocker"
-        physics.addBody( shipBlock, { isSensor = true } )
- levelGroup:insert(shipBlock) 
+ local screenBlock = display.newRect(0, _H*0.5, 1, _H)
+ screenBlock.name = "blocker"
+ physics.addBody( screenBlock, { isSensor = true } )
+-- screenBlock.isVisible = false
+ levelGroup:insert(screenBlock)
 end
 levelSetup()
 
 local function spawnEnemy()
-    local imageInt = mr(1,4)
-
     spermSpritesheetData = { width=32, height=32, numFrames=3 }
     mySpermSheet = graphics.newImageSheet( "images/Sperm.png", spermSpritesheetData )
     spermSequenceData = {
@@ -118,6 +121,9 @@ local function gameLoop(event)
   end
 
  --Set score and level text here..
+  scoreText.text = "Score: "..score
+  percentText.text = "Percent: "..pregPercent
+  score = score +5
 
   --Move the enemies down each frame!
   local i
@@ -137,32 +143,20 @@ local function onCollision(event)
  local obj1 = event.object1; 
  local obj2 = event.object2; 
 
- if obj1.name == "laser" and obj2.name == "enemy" or obj1.name == "enemy" and obj2.name == "laser" then
- display.remove( obj1 ); obj1 = nil
- display.remove( obj2 ); obj2 = nil
- score = score + 100 --Yay points!
+  if obj1.name == "ship" and obj2.name == "enemy" or obj2.name == "ship" and obj1.name == "enemy" then
+   if obj1.name == "enemy" then
+    display.remove( obj1 ); obj1 = nil
+   elseif obj2.name == "enemy" then
+    display.remove( obj2 ); obj2 = nil
+   end
+   score = score + 100 --Yay points!
 
- elseif obj1.name == "ship" and obj2.name == "enemy" or obj2.name == "ship" and obj1.name == "enemy" then
-  if obj1.name == "enemy" then
-   display.remove( obj1 ); obj1 = nil
-  elseif obj2.name == "enemy" then
-   display.remove( obj2 ); obj2 = nil
   end
- score = score + 100 --Yay points!
-
- elseif obj1.name == "enemy" and obj2.name == "blocker" or obj2.name == "enemy" and obj1.name == "blocker"then
- if obj1.name == "enemy" then 
- display.remove(obj1); obj1 = nil
- elseif obj2.name == "enemy" then 
- display.remove( obj2 ); obj2 = nil
- end
- elseif obj1.name == "laser" and obj2.name == "blocker" or obj2.name == "laser" and obj1.name == "blocker"then
- if obj1.name == "laser" then 
- display.remove(obj1); obj1 = nil
- elseif obj2.name == "laser" then 
- display.remove( obj2 ); obj2 = nil
- end
- end
+  if obj1.name == "enemy" and obj2.name == "blocker" or obj1.name == "blocker" and obj2.name == "enemy" then
+   pregPercent = pregPercent + 5
+   if pregPercent == 100 then gameOver()
+   end
+  end
  end
 end
 Runtime:addEventListener( "collision", onCollision )
@@ -172,22 +166,17 @@ local function gameOver()
  local function restartGame( event ) 
  if event.phase == "ended" then
  --Loop through the groups deleting everyting
- local i
- for i = levelGroup.numChildren,1,-1 do
- local child = levelGroup[i]
- child.parent:remove( child )
- child = nil
- end
- for i = weaponGroup.numChildren,1,-1 do
- local child = weaponGroup[i]
- child.parent:remove( child )
- child = nil
- end
- for i = enemyGroup.numChildren,1,-1 do
- local child = enemyGroup[i]
- child.parent:remove( child )
- child = nil
- end
+-- local i
+-- for i = levelGroup.numChildren,1,-1 do
+-- local child = levelGroup[i]
+-- child.parent:remove( child )
+-- child = nil
+-- end
+-- for i = enemyGroup.numChildren,1,-1 do
+-- local child = enemyGroup[i]
+-- child.parent:remove( child )
+-- child = nil
+-- end
  --Now reset the vars and create everything again.
  gameIsActive = true
  enemySpeed = 15
@@ -196,21 +185,18 @@ local function gameOver()
  score = 0
  wave = 1
  levelSetup()
- --startProjectiles()
  end
  return true
  end
  --Show game over text and restart text.
-        --The only reason we insert the text into the weapon group
-        --is so that it appears in front of the enemies.
- local gameOverText = display.newText("Ohuh! You died on wave "..wave, 0,0, "Helvetica", 20)
- gameOverText.x = _W*0.5; gameOverText.y = _H*0.4; 
-        weaponGroup:insert(gameOverText)
+ local gameOverText = display.newText("Ohuh! You died", 0,0, "Helvetica", 20)
+ gameOverText.x = _W*0.5; gameOverText.y = _H*0.4;
+ levelGroup:insert(gameOverText)
  local gameOverScore = display.newText("With a score of "..score, 0,0, "Helvetica", 20)
- gameOverScore.x = _W*0.5; gameOverScore.y = gameOverText.y + 30; 
-        weaponGroup:insert(gameOverScore)
+ gameOverScore.x = _W*0.5; gameOverScore.y = gameOverText.y + 30;
+ levelGroup:insert(gameOverScore)
  local tryAgainText = display.newText("Click me to try again!", 0,0, "Helvetica", 20)
- tryAgainText.x = _W*0.5; tryAgainText.y = gameOverScore.y + 50; 
-        weaponGroup:insert(tryAgainText)
+ tryAgainText.x = _W*0.5; tryAgainText.y = gameOverScore.y + 50;
+ levelGroup:insert(tryAgainText)
  tryAgainText:addEventListener("touch", restartGame)
 end
