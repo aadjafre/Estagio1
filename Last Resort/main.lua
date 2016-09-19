@@ -77,7 +77,7 @@ local function levelSetup()
  local screenBlock = display.newRect(0, _H*0.5, 1, _H)
  screenBlock.name = "blocker"
  physics.addBody( screenBlock, { isSensor = true } )
--- screenBlock.isVisible = false
+ screenBlock.isVisible = false
  levelGroup:insert(screenBlock)
 end
 levelSetup()
