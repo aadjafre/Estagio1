@@ -12,7 +12,7 @@ local _W = display.contentWidth
 local _H = display.contentHeight
 local mr = math.random --Localise math.random
 
-local stars1, stars2 --Background moving stars
+local uterus1, uterus2 --Background moving stars
 local gameIsActive = true 
 local spawnInt = 0 --Gameloop spawn control
 local spawnIntMax = 30 --Gameloop max spawn
@@ -24,12 +24,12 @@ local enemySpeed = -8 --How fast the enemies are
 local scoreText; local percentText; local ship; local wave=5;
 
 local function levelSetup()
- stars1 = display.newImageRect("images/bg.png", 628,280)
- stars1.x = _W*0.5; stars1.y = _H*0.5
- levelGroup:insert(stars1)
- stars2 = display.newImageRect("images/bg.png", 628,280)
- stars2.x = _W*0.5; stars2.y = _H*0.5
- levelGroup:insert(stars2)
+ uterus1 = display.newImageRect("images/bg.png", 628,280)
+ uterus1.x = _W*0.5; uterus1.y = _H*0.5
+ levelGroup:insert(uterus1)
+ uterus2 = display.newImageRect("images/bg.png", 628,280)
+ uterus2.x = _W*0.5; uterus2.y = _H*0.5
+ levelGroup:insert(uterus2)
  scoreText = display.newText("Score: "..score, 0,0,"Helvetica",18)
  scoreText:setTextColor(225, 225, 225)
  scoreText.x = _W*0.5; scoreText.y = 10
@@ -40,12 +40,12 @@ local function levelSetup()
  levelGroup:insert(percentText)
 
  --Move Uterus.
- stars1:translate(0,2); stars2:translate(0,2)
- if stars1.y >= (_H*0.5)+280 then
-  stars1.y = (_H*0.5)-280
+ uterus1:translate(0,2); uterus2:translate(0,2)
+ if uterus1.y >= (_H*0.5)+280 then
+  uterus1.y = (_H*0.5)-280
  end
- if stars2.y >= (_H*0.5)+280 then
-  stars2.y = (_H*0.5)-280
+ if uterus2.y >= (_H*0.5)+280 then
+  uterus2.y = (_H*0.5)-280
  end
 
 
@@ -154,49 +154,49 @@ local function onCollision(event)
   end
   if obj1.name == "enemy" and obj2.name == "blocker" or obj1.name == "blocker" and obj2.name == "enemy" then
    pregPercent = pregPercent + 5
-   if pregPercent == 100 then gameOver()
+   if pregPercent == 5 then
+    gameOver()
    end
   end
  end
 end
 Runtime:addEventListener( "collision", onCollision )
 
-local function gameOver()
+function gameOver()
  gameIsActive = false --Stop the loops from running
- local function restartGame( event ) 
- if event.phase == "ended" then
- --Loop through the groups deleting everyting
--- local i
--- for i = levelGroup.numChildren,1,-1 do
--- local child = levelGroup[i]
--- child.parent:remove( child )
--- child = nil
--- end
--- for i = enemyGroup.numChildren,1,-1 do
--- local child = enemyGroup[i]
--- child.parent:remove( child )
--- child = nil
--- end
- --Now reset the vars and create everything again.
- gameIsActive = true
- enemySpeed = 15
- spawnInt = 0; spawnIntMax = 30
- spawned = 0; spawnedMax = 10
- score = 0
- wave = 1
- levelSetup()
+ local function restartGame( event )
+  if event.phase == "ended" then
+  --Loop through the groups deleting everyting
+  local i
+  for i = levelGroup.numChildren,1,-1 do
+  local child = levelGroup[i]
+  child.parent:remove( child )
+  child = nil
+  end
+  for i = enemyGroup.numChildren,1,-1 do
+  local child = enemyGroup[i]
+  child.parent:remove( child )
+  child = nil
+  end
+  --Now reset the vars and create everything again.
+  gameIsActive = true
+  enemySpeed = 15
+  spawnInt = 0; spawnIntMax = 30
+  spawned = 0; spawnedMax = 10
+  score = 0
+  wave = 1
+  levelSetup()
+  end
  end
- return true
- end
- --Show game over text and restart text.
- local gameOverText = display.newText("Ohuh! You died", 0,0, "Helvetica", 20)
+-- Show game over text and restart text.
+ local gameOverText = display.newText("Ohuh! Expect the unexpected", 0,0, "Helvetica", 20)
  gameOverText.x = _W*0.5; gameOverText.y = _H*0.4;
  levelGroup:insert(gameOverText)
- local gameOverScore = display.newText("With a score of "..score, 0,0, "Helvetica", 20)
+ local gameOverScore = display.newText("Your score is "..score, 0,0, "Helvetica", 20)
  gameOverScore.x = _W*0.5; gameOverScore.y = gameOverText.y + 30;
  levelGroup:insert(gameOverScore)
  local tryAgainText = display.newText("Click me to try again!", 0,0, "Helvetica", 20)
  tryAgainText.x = _W*0.5; tryAgainText.y = gameOverScore.y + 50;
  levelGroup:insert(tryAgainText)
- tryAgainText:addEventListener("touch", restartGame)
+ tryAgainText:addEventListener("touch", levelSetup)
 end
