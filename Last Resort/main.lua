@@ -141,7 +141,20 @@ Runtime:addEventListener ("enterFrame", gameLoop)
 local function onCollision(event)
  if event.phase == "began" and gameIsActive == true then
  local obj1 = event.object1; 
- local obj2 = event.object2; 
+ local obj2 = event.object2;
+ local callGameOver = function()
+  gameIsActive=false
+  -- Show game over text and restart text.
+  local gameOverText = display.newText("Ohuh! Expect the unexpected", 0,0, "Helvetica", 20)
+  gameOverText.x = _W*0.5; gameOverText.y = _H*0.4;
+  levelGroup:insert(gameOverText)
+  local gameOverScore = display.newText("Your score is "..score, 0,0, "Helvetica", 20)
+  gameOverScore.x = _W*0.5; gameOverScore.y = gameOverText.y + 30;
+  levelGroup:insert(gameOverScore)
+  local tryAgainText = display.newText("Touch to try again!", 0,0, "Helvetica", 20)
+  tryAgainText.x = _W*0.5; tryAgainText.y = gameOverScore.y + 50;
+  levelGroup:insert(tryAgainText)
+ end
 
   if obj1.name == "ship" and obj2.name == "enemy" or obj2.name == "ship" and obj1.name == "enemy" then
    if obj1.name == "enemy" then
@@ -155,48 +168,9 @@ local function onCollision(event)
   if obj1.name == "enemy" and obj2.name == "blocker" or obj1.name == "blocker" and obj2.name == "enemy" then
    pregPercent = pregPercent + 5
    if pregPercent == 5 then
-    gameOver()
+    callGameOver()
    end
   end
  end
 end
 Runtime:addEventListener( "collision", onCollision )
-
-function gameOver()
- gameIsActive = false --Stop the loops from running
- local function restartGame( event )
-  if event.phase == "ended" then
-  --Loop through the groups deleting everyting
-  local i
-  for i = levelGroup.numChildren,1,-1 do
-  local child = levelGroup[i]
-  child.parent:remove( child )
-  child = nil
-  end
-  for i = enemyGroup.numChildren,1,-1 do
-  local child = enemyGroup[i]
-  child.parent:remove( child )
-  child = nil
-  end
-  --Now reset the vars and create everything again.
-  gameIsActive = true
-  enemySpeed = 15
-  spawnInt = 0; spawnIntMax = 30
-  spawned = 0; spawnedMax = 10
-  score = 0
-  wave = 1
-  levelSetup()
-  end
- end
--- Show game over text and restart text.
- local gameOverText = display.newText("Ohuh! Expect the unexpected", 0,0, "Helvetica", 20)
- gameOverText.x = _W*0.5; gameOverText.y = _H*0.4;
- levelGroup:insert(gameOverText)
- local gameOverScore = display.newText("Your score is "..score, 0,0, "Helvetica", 20)
- gameOverScore.x = _W*0.5; gameOverScore.y = gameOverText.y + 30;
- levelGroup:insert(gameOverScore)
- local tryAgainText = display.newText("Click me to try again!", 0,0, "Helvetica", 20)
- tryAgainText.x = _W*0.5; tryAgainText.y = gameOverScore.y + 50;
- levelGroup:insert(tryAgainText)
- tryAgainText:addEventListener("touch", levelSetup)
-end
