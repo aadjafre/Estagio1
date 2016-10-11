@@ -4,16 +4,19 @@ physics.start(); physics.setGravity( 0, 0 ) --Start physics
 -----------------------------------------------
 --*** Set up our variables and group ***
 -----------------------------------------------
-local levelGroup = display.newGroup()
-local enemyGroup = display.newGroup()
-local weaponGroup = display.newGroup()
-
+local levelGroup
+local enemyGroup
 local _W = display.contentWidth
 local _H = display.contentHeight
 local mr = math.random --Localise math.random
+local gameIsActive
 
+local gameLoop
+local callGameOver
+local spawnEnemy
+local onCollision
+local onGameOver
 local uterus1, uterus2 --Background moving stars
-local gameIsActive = true 
 local spawnInt = 0 --Gameloop spawn control
 local spawnIntMax = 30 --Gameloop max spawn
 local spawned = 0 --Keep track of enemies
@@ -23,7 +26,61 @@ local pregPercent = 0
 local enemySpeed = -8 --How fast the enemies are
 local scoreText; local percentText; local ship; local wave=5;
 
+spawnEnemy = function()
+ spermSpritesheetData = { width=32, height=32, numFrames=3 }
+ mySpermSheet = graphics.newImageSheet( "images/Sperm.png", spermSpritesheetData )
+ spermSequenceData = {
+  {name = "normalRun", start=1, count=3, time=800}
+ }
+ spermMoving = display.newSprite( mySpermSheet, spermSequenceData )
+ spermMoving:play()
+ spermMoving.x = 600; spermMoving.y = mr( 30, 280 )
+ spermMoving.name = "enemy"; physics.addBody( spermMoving, { isSensor = true } )
+ enemyGroup:insert( spermMoving )
+
+ if spawned == spawnedMax then
+  wave = wave + 1 --Increase the wave.
+  if wave <= 18 then --Limit max speed/spawn
+  enemySpeed = enemySpeed - 1
+  spawnIntMax = math.round(spawnIntMax * 0.9)
+  end
+  spawned = 0 --Reset so that the next wave starts from 0
+ end
+ spawnInt = 0
+end
+
+gameLoop = function()
+ if gameIsActive == true then
+  --Increase the int until it spawns an enemy..
+  spawnInt = spawnInt + 1
+
+  --change spawnIntMax if you want enemies to spawn
+  --faster or slower.
+  if spawnInt == spawnIntMax then
+   spawnEnemy()
+   spawned = spawned + 1
+  end
+
+  --Set score and level text here..
+  scoreText.text = "Score: "..score
+  percentText.text = "Percent: "..pregPercent
+  score = score +5
+
+  --Move the enemies down each frame!
+  local i
+  for i = enemyGroup.numChildren,1,-1 do
+   local enemy = enemyGroup[i]
+   if enemy ~= nil and enemy.y ~= nil then
+    enemy:translate( enemySpeed, 0)
+   end
+  end
+ end
+end
+
 local function levelSetup()
+ gameIsActive=true
+ levelGroup = display.newGroup()
+ enemyGroup = display.newGroup()
  uterus1 = display.newImageRect("images/bg.png", 628,280)
  uterus1.x = _W*0.5; uterus1.y = _H*0.5
  levelGroup:insert(uterus1)
@@ -47,7 +104,6 @@ local function levelSetup()
  if uterus2.y >= (_H*0.5)+280 then
   uterus2.y = (_H*0.5)-280
  end
-
 
  local function moveShip( event )
   local t = event.target; local phase = event.phase
@@ -79,83 +135,40 @@ local function levelSetup()
  physics.addBody( screenBlock, { isSensor = true } )
  screenBlock.isVisible = false
  levelGroup:insert(screenBlock)
+
 end
 levelSetup()
-
-local function spawnEnemy()
-    spermSpritesheetData = { width=32, height=32, numFrames=3 }
-    mySpermSheet = graphics.newImageSheet( "images/Sperm.png", spermSpritesheetData )
-    spermSequenceData = {
-                        {name = "normalRun", start=1, count=3, time=800}
-                       }
-    spermMoving = display.newSprite( mySpermSheet, spermSequenceData )
-    spermMoving:play()
-
-
-        --local enemy = display.newImageSheet("images/Sperm.png",50,54)
- spermMoving.x = 600; spermMoving.y = mr( 30, 280 )
- spermMoving.name = "enemy"; physics.addBody( spermMoving, { isSensor = true } )
- enemyGroup:insert( spermMoving )
-
- if spawned == spawnedMax then 
- wave = wave + 1 --Increase the wave.
-    if wave <= 18 then --Limit max speed/spawn
-    enemySpeed = enemySpeed - 1
-    spawnIntMax = math.round(spawnIntMax * 0.9)
-    end
-    spawned = 0 --Reset so that the next wave starts from 0
-    end
- spawnInt = 0
-end
-
-local function gameLoop(event)
-  if gameIsActive == true then
-  --Increase the int until it spawns an enemy..
-  spawnInt = spawnInt + 1
-
- --change spawnIntMax if you want enemies to spawn
- --faster or slower.
-  if spawnInt == spawnIntMax then
-  spawnEnemy()
-  spawned = spawned + 1
-  end
-
- --Set score and level text here..
-  scoreText.text = "Score: "..score
-  percentText.text = "Percent: "..pregPercent
-  score = score +5
-
-  --Move the enemies down each frame!
-  local i
-  for i = enemyGroup.numChildren,1,-1 do
-  local enemy = enemyGroup[i]
-  if enemy ~= nil and enemy.y ~= nil then
-   enemy:translate( enemySpeed, 0)
-  end
-  end
-
- end
-end
 Runtime:addEventListener ("enterFrame", gameLoop)
 
-local function onCollision(event)
+onGameOver = function(event)
+ if (event.phase == "began") then
+  display.remove(enemyGroup)
+  display.remove(levelGroup)
+  score=0
+  pregPercent=0
+  levelSetup()
+ end
+end
+
+callGameOver = function()
+   gameIsActive=false
+ -- Show game over text and restart text.
+ local gameOverText = display.newText("Ohuh! Expect the unexpected", 0,0, "Helvetica", 20)
+ gameOverText.x = _W*0.5; gameOverText.y = _H*0.4;
+ levelGroup:insert(gameOverText)
+ local gameOverScore = display.newText("Your score is "..score, 0,0, "Helvetica", 20)
+ gameOverScore.x = _W*0.5; gameOverScore.y = gameOverText.y + 30;
+ levelGroup:insert(gameOverScore)
+ local tryAgainText = display.newText("Touch to try again!", 0,0, "Helvetica", 20)
+ tryAgainText.x = _W*0.5; tryAgainText.y = gameOverScore.y + 50;
+ tryAgainText:addEventListener("touch", onGameOver)
+ levelGroup:insert(tryAgainText)
+end
+
+onCollision = function(event)
  if event.phase == "began" and gameIsActive == true then
  local obj1 = event.object1; 
  local obj2 = event.object2;
- local callGameOver = function()
-  gameIsActive=false
-  -- Show game over text and restart text.
-  local gameOverText = display.newText("Ohuh! Expect the unexpected", 0,0, "Helvetica", 20)
-  gameOverText.x = _W*0.5; gameOverText.y = _H*0.4;
-  levelGroup:insert(gameOverText)
-  local gameOverScore = display.newText("Your score is "..score, 0,0, "Helvetica", 20)
-  gameOverScore.x = _W*0.5; gameOverScore.y = gameOverText.y + 30;
-  levelGroup:insert(gameOverScore)
-  local tryAgainText = display.newText("Touch to try again!", 0,0, "Helvetica", 20)
-  tryAgainText.x = _W*0.5; tryAgainText.y = gameOverScore.y + 50;
-  levelGroup:insert(tryAgainText)
- end
-
   if obj1.name == "ship" and obj2.name == "enemy" or obj2.name == "ship" and obj1.name == "enemy" then
    if obj1.name == "enemy" then
     display.remove( obj1 ); obj1 = nil
@@ -167,10 +180,11 @@ local function onCollision(event)
   end
   if obj1.name == "enemy" and obj2.name == "blocker" or obj1.name == "blocker" and obj2.name == "enemy" then
    pregPercent = pregPercent + 5
-   if pregPercent == 5 then
+   if pregPercent == 105 then
     callGameOver()
    end
   end
  end
 end
+
 Runtime:addEventListener( "collision", onCollision )
