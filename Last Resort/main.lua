@@ -19,11 +19,11 @@ local onGameOver
 local uterus1, uterus2 --Background moving stars
 local spawnInt = 0 --Gameloop spawn control
 local spawnIntMax = 30 --Gameloop max spawn
-local spawned = 0 --Keep track of enemies
+local spawned = 10 --Keep track of enemies
 local spawnedMax = 10 --Max allowed per level
 local score = 0
 local pregPercent = 0
-local enemySpeed = -8 --How fast the enemies are
+local enemySpeed = -5 --How fast the enemies are
 local scoreText; local percentText; local ship; local wave=5;
 
 spawnEnemy = function()
@@ -123,12 +123,30 @@ local function levelSetup()
   end
   return true
  end
- ship = display.newImageRect("images/ship.png", 100, 60)
- ship.x = -80; ship.y = _H*0.5; ship.name = "ship"
+ --OldCode
+-- ship = display.newImageRect("images/ship.png", 100, 60)
+-- ship.x = -80; ship.y = _H*0.5; ship.name = "ship"
+-- physics.addBody( ship, { isSensor = true } )
+-- ship:addEventListener("touch",moveShip)
+-- levelGroup:insert(ship)
+-- transition.to(ship, {time = 600, x = 0})
+-- --EndOldCode
+ --New Code
+ shipSpriteSheetData = { width=105, height=83, numFrames=7}
+ myShipSheet = graphics.newImageSheet( "images/resized.png", shipSpriteSheetData )
+ shipSequenceData = {
+  {name = "normalRun", start=1, count=7, time=900, loopCount=1}
+ }
+ ship = display.newSprite( myShipSheet, shipSequenceData )
+ ship:play()
+ ship.x = -80; ship.y = _H*0.5; ship.name = "ship";
  physics.addBody( ship, { isSensor = true } )
  ship:addEventListener("touch",moveShip)
  levelGroup:insert(ship)
- transition.to(ship, {time = 600, x = 0})
+ transition.to(ship, {time = 200, x = 0})
+ --EndCode
+
+
 
  local screenBlock = display.newRect(0, _H*0.5, 1, _H)
  screenBlock.name = "blocker"
@@ -146,6 +164,10 @@ onGameOver = function(event)
   display.remove(levelGroup)
   score=0
   pregPercent=0
+  enemySpeed=-8
+  spawnInt = 0
+  spawnIntMax = 30
+  spawned = 0
   levelSetup()
  end
 end
@@ -177,10 +199,9 @@ onCollision = function(event)
    end
    score = score + 100 --Yay points!
 
-  end
-  if obj1.name == "enemy" and obj2.name == "blocker" or obj1.name == "blocker" and obj2.name == "enemy" then
+  elseif obj1.name == "enemy" and obj2.name == "blocker" or obj1.name == "blocker" and obj2.name == "enemy" then
    pregPercent = pregPercent + 5
-   if pregPercent == 105 then
+   if pregPercent == 5 then
     callGameOver()
    end
   end
