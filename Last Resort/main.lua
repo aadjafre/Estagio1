@@ -111,27 +111,19 @@ local function levelSetup()
    display.getCurrentStage():setFocus( t )
    t.isFocus = true
    t.y0 = event.y - t.y
-   elseif t.isFocus then
+  elseif t.isFocus then
    if "moved" == phase then
     t.y = event.y - t.y0
     if t.y >= 270 then t.y = 270 end
     if t.y <= 50 then t.y = 50 end
-    elseif "ended" == phase or "cancelled" == phase then
+   elseif "ended" == phase or "cancelled" == phase then
     display.getCurrentStage():setFocus( nil )
     t.isFocus = false
    end
   end
   return true
  end
- --OldCode
--- ship = display.newImageRect("images/ship.png", 100, 60)
--- ship.x = -80; ship.y = _H*0.5; ship.name = "ship"
--- physics.addBody( ship, { isSensor = true } )
--- ship:addEventListener("touch",moveShip)
--- levelGroup:insert(ship)
--- transition.to(ship, {time = 600, x = 0})
--- --EndOldCode
- --New Code
+
  shipSpriteSheetData = { width=105, height=83, numFrames=7}
  myShipSheet = graphics.newImageSheet( "images/resized.png", shipSpriteSheetData )
  shipSequenceData = {
@@ -140,13 +132,10 @@ local function levelSetup()
  ship = display.newSprite( myShipSheet, shipSequenceData )
  ship:play()
  ship.x = -80; ship.y = _H*0.5; ship.name = "ship";
- physics.addBody( ship, { isSensor = true } )
+ physics.addBody( ship, { isSensor = true, radius = 10} )
  ship:addEventListener("touch",moveShip)
  levelGroup:insert(ship)
  transition.to(ship, {time = 200, x = 0})
- --EndCode
-
-
 
  local screenBlock = display.newRect(0, _H*0.5, 1, _H)
  screenBlock.name = "blocker"
@@ -173,7 +162,7 @@ onGameOver = function(event)
 end
 
 callGameOver = function()
-   gameIsActive=false
+ gameIsActive=false
  -- Show game over text and restart text.
  local gameOverText = display.newText("Ohuh! Expect the unexpected", 0,0, "Helvetica", 20)
  gameOverText.x = _W*0.5; gameOverText.y = _H*0.4;
@@ -189,8 +178,8 @@ end
 
 onCollision = function(event)
  if event.phase == "began" and gameIsActive == true then
- local obj1 = event.object1; 
- local obj2 = event.object2;
+  local obj1 = event.object1;
+  local obj2 = event.object2;
   if obj1.name == "ship" and obj2.name == "enemy" or obj2.name == "ship" and obj1.name == "enemy" then
    if obj1.name == "enemy" then
     display.remove( obj1 ); obj1 = nil
@@ -201,7 +190,7 @@ onCollision = function(event)
 
   elseif obj1.name == "enemy" and obj2.name == "blocker" or obj1.name == "blocker" and obj2.name == "enemy" then
    pregPercent = pregPercent + 5
-   if pregPercent == 5 then
+   if pregPercent == 10 then
     callGameOver()
    end
   end
