@@ -1,3 +1,5 @@
+local composer = require( "composer" )
+local scene = composer.newScene()
 display.setStatusBar( display.HiddenStatusBar ) --Hide status bar from the beginning
 local physics = require ("physics") --Require physics
 physics.start(); physics.setGravity( 0, 0 ) --Start physics
@@ -11,6 +13,7 @@ local _H = display.contentHeight
 local mr = math.random --Localise math.random
 local gameIsActive
 
+local backgroundMusic = audio.loadStream("songs/Move_Out.mp3", {channel=1, loops=-1})
 local gameLoop
 local callGameOver
 local spawnEnemy
@@ -23,7 +26,7 @@ local spawned = 10 --Keep track of enemies
 local spawnedMax = 10 --Max allowed per level
 local score = 0
 local pregPercent = 0
-local enemySpeed = -5 --How fast the enemies are
+local enemySpeed = -12 --How fast the enemies are
 local scoreText; local percentText; local ship; local wave=5;
 
 spawnEnemy = function()
@@ -95,6 +98,7 @@ local function levelSetup()
  percentText:setTextColor(255, 255, 255)
  percentText.x = 0; percentText.y = 10
  levelGroup:insert(percentText)
+ local backgroundMusicChannel = audio.play(backgroundMusic, {channel=1, loops=-1})
 
  --Move Uterus.
  uterus1:translate(0,2); uterus2:translate(0,2)
@@ -151,9 +155,10 @@ onGameOver = function(event)
  if (event.phase == "began") then
   display.remove(enemyGroup)
   display.remove(levelGroup)
+  backgroundMusic = null
   score=0
   pregPercent=0
-  enemySpeed=-8
+  enemySpeed=-18
   spawnInt = 0
   spawnIntMax = 30
   spawned = 0
@@ -190,7 +195,7 @@ onCollision = function(event)
 
   elseif obj1.name == "enemy" and obj2.name == "blocker" or obj1.name == "blocker" and obj2.name == "enemy" then
    pregPercent = pregPercent + 5
-   if pregPercent == 10 then
+   if pregPercent == 105 then
     callGameOver()
    end
   end
