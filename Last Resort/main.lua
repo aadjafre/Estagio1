@@ -14,6 +14,7 @@ local mr = math.random --Localise math.random
 local gameIsActive
 
 local backgroundMusic = audio.loadStream("songs/Move_Out.mp3", {channel=1, loops=-1})
+local pointSound = audio.loadStream("songs/Beep_Short.mp3", {channel=1, loops=1})
 local gameLoop
 local callGameOver
 local spawnEnemy
@@ -26,7 +27,7 @@ local spawned = 10 --Keep track of enemies
 local spawnedMax = 10 --Max allowed per level
 local score = 0
 local pregPercent = 0
-local enemySpeed = -12 --How fast the enemies are
+local enemySpeed = -5 --How fast the enemies are
 local scoreText; local percentText; local ship; local wave=5;
 
 spawnEnemy = function()
@@ -38,7 +39,7 @@ spawnEnemy = function()
  spermMoving = display.newSprite( mySpermSheet, spermSequenceData )
  spermMoving:play()
  spermMoving.x = 600; spermMoving.y = mr( 30, 280 )
- spermMoving.name = "enemy"; physics.addBody( spermMoving, { isSensor = true } )
+ spermMoving.name = "enemy"; physics.addBody( spermMoving, { isSensor = true, "static" } )
  enemyGroup:insert( spermMoving )
 
  if spawned == spawnedMax then
@@ -98,7 +99,7 @@ local function levelSetup()
  percentText:setTextColor(255, 255, 255)
  percentText.x = 0; percentText.y = 10
  levelGroup:insert(percentText)
- local backgroundMusicChannel = audio.play(backgroundMusic, {channel=1, loops=-1})
+ audio.play(backgroundMusic, {channel=1, loops=-1})
 
  --Move Uterus.
  uterus1:translate(0,2); uterus2:translate(0,2)
@@ -158,7 +159,7 @@ onGameOver = function(event)
   backgroundMusic = null
   score=0
   pregPercent=0
-  enemySpeed=-18
+  enemySpeed=-5
   spawnInt = 0
   spawnIntMax = 30
   spawned = 0
@@ -187,8 +188,10 @@ onCollision = function(event)
   local obj2 = event.object2;
   if obj1.name == "ship" and obj2.name == "enemy" or obj2.name == "ship" and obj1.name == "enemy" then
    if obj1.name == "enemy" then
+    audio.play(pointSound, {loops=1, channel=2})
     display.remove( obj1 ); obj1 = nil
    elseif obj2.name == "enemy" then
+    audio.play(pointSound, {loops=1, channel=2})
     display.remove( obj2 ); obj2 = nil
    end
    score = score + 100 --Yay points!
