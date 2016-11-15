@@ -49,15 +49,18 @@ function scene:create( event )
     playBtn = widget.newButton{
         label="Take the Pill",
         labelColor = { default={255}, over={128} },
+        font="Nosifer-Regular.ttf",
         width=154, height=40,
         onRelease = onPlayBtnRelease	-- event listener function
     }
     playBtn.x = display.contentCenterX
     playBtn.y = display.contentHeight - 125
 
-    titleText = display.newText("Last Resort", 0,0,"Helvetica",50)
+    titleText = display.newText("Last Resort", 0,0,"Nosifer-Regular.ttf",50)
     titleText.x=display.actualContentWidth/2.35
-    titleText.y=display.actualContentHeight/3.5
+    titleText.y=display.actualContentHeight/2.25
+
+    shipText = display.newImage("images/ship.png", display.actualContentWidth/2.35, display.actualContentHeight/5)
 
     -- all display objects must be inserted into group
     sceneGroup:insert( background )

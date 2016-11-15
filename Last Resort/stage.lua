@@ -29,7 +29,7 @@ function scene:create(event)
     local spawnedMax = 10 --Max allowed per level
     local score = 0 --Score of the game
     local pregPercent = 0 --Percent until game over
-    local enemySpeed = -5 --How fast the enemies are
+    local enemySpeed = -3 --How fast the enemies are
     local scoreText; local percentText; local ship; local wave=5;
 
     spawnEnemy = function()
@@ -69,7 +69,7 @@ function scene:create(event)
 
             --Set score and level text here..
             scoreText.text = "Score: "..score
-            percentText.text = "Percent: "..pregPercent
+            percentText.text = "Percent: "..pregPercent .."%"
             score = score +5
 
             --Move the enemies down each frame!
@@ -93,13 +93,13 @@ function scene:create(event)
         uterus2 = display.newImageRect("images/bg.png", 628,280)
         uterus2.x = _W*0.5; uterus2.y = _H*0.5
         levelGroup:insert(uterus2)
-        scoreText = display.newText("Score: "..score, 0,0,"Helvetica",18)
+        scoreText = display.newText("Score: "..score, 0,0,"Nosifer-Regular.ttf",18)
         scoreText:setTextColor(225, 225, 225)
         scoreText.x = _W*0.5; scoreText.y = 10
         levelGroup:insert(scoreText)
-        percentText = display.newText("Percent: "..pregPercent, 0,0,"Helvetica",18)
+        percentText = display.newText("Percent: "..pregPercent, 0,0,"Nosifer-Regular.ttf",18)
         percentText:setTextColor(255, 255, 255)
-        percentText.x = 0; percentText.y = 10
+        percentText.x = 55; percentText.y = 10
         levelGroup:insert(percentText)
         audio.play(backgroundMusic, {channel=1, loops=-1})
 
@@ -170,15 +170,16 @@ function scene:create(event)
     end
 
     callGameOver = function()
+        score = score +5
         gameIsActive=false
         -- Show game over text and restart text.
-        local gameOverText = display.newText("Ohuh! Expect the unexpected", 0,0, "Helvetica", 20)
+        local gameOverText = display.newText("Ohuh! Expect the unexpected", 0,0, "Nosifer-Regular.ttf", 20)
         gameOverText.x = _W*0.5; gameOverText.y = _H*0.4;
         levelGroup:insert(gameOverText)
-        local gameOverScore = display.newText("Your score is "..score, 0,0, "Helvetica", 20)
+        local gameOverScore = display.newText("Your score is "..score, 0,0, "Nosifer-Regular.ttf", 20)
         gameOverScore.x = _W*0.5; gameOverScore.y = gameOverText.y + 30;
         levelGroup:insert(gameOverScore)
-        local tryAgainText = display.newText("Touch to try again!", 0,0, "Helvetica", 20)
+        local tryAgainText = display.newText("Touch to try again!", 0,0, "Nosifer-Regular.ttf", 20)
         tryAgainText.x = _W*0.5; tryAgainText.y = gameOverScore.y + 50;
         tryAgainText:addEventListener("touch", onGameOver)
         levelGroup:insert(tryAgainText)
@@ -199,10 +200,10 @@ function scene:create(event)
                 score = score + 100 --Yay points!
 
             elseif obj1.name == "enemy" and obj2.name == "blocker" or obj1.name == "blocker" and obj2.name == "enemy" then
-                pregPercent = pregPercent + 5
-                if pregPercent == 105 then
-                    callGameOver()
-                end
+                pregPercent = pregPercent + 2                
+            end
+            if pregPercent >= 102 then
+                callGameOver()
             end
         end
     end
